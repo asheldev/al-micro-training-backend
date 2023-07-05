@@ -1,0 +1,10 @@
+# package directories
+node_modules
+**/node_modules
+**/.env
+jspm_packages
+
+# Serverless directories
+.serverless
+**/.serverless
+.env
