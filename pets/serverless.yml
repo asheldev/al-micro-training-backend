@@ -37,6 +37,7 @@ functions:
           path: /pets
           method: post
           authorizer: ${self:custom.common.lambdaAuthorizer}
+
   getAllPets:
     name: get-all-pets-${opt:stage}
     handler: src/get-all-pets.handler
@@ -48,6 +49,7 @@ functions:
       - httpApi:
           path: /pets/{fundationId}
           method: get
+
   getOnePet:
     name: get-one-pet-${opt:stage}
     handler: src/get-one-pet.handler
@@ -58,3 +60,18 @@ functions:
       - httpApi:
           path: /pets
           method: get
+
+  deletePet:
+    name: delete-pet-${opt:stage}
+    handler: src/delete-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+    events:
+      - httpApi:
+          path: /pets
+          method: delete
+          authorizer: ${self:custom.common.lambdaAuthorizer}
