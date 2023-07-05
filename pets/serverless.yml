@@ -3,6 +3,9 @@ frameworkVersion: '3'
 
 useDotenv: true
 
+package:
+  individually: true
+
 custom:
   common: ${file(../serverless.common.yml)}
   esbuild:
@@ -19,7 +22,8 @@ plugins: ${self:custom.common.plugins}
 provider: ${self:custom.common.provider}
 
 functions:
-  test:
+  createPet:
+    name: create-pet-${opt:stage}
     handler: src/create-pet.handler
     layers:
       - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
@@ -33,4 +37,14 @@ functions:
           path: /pets
           method: post
           authorizer: ${self:custom.common.lambdaAuthorizer}
-  
+  getAllPets:
+    name: get-all-pets-${opt:stage}
+    handler: src/get-all-pets.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      PETS_TABLE_SEC_INDEX: ${env:PETS_TABLE_SEC_INDEX}
+    events:
+      - httpApi:
+          path: /pets/{fundationId}
+          method: get
