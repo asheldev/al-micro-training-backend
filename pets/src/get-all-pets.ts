@@ -20,7 +20,9 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 		const filterExpressionValues = {
 			':fundationId': fundationId,
 		};
-		const filterExpressionAttrs = {};
+		const filterExpressionAttrs = {
+			'#fundationId': 'fundationId'
+		};
 
 		if (queryParams && queryParams.type) {
 			filterExpression += filterExpression
@@ -46,12 +48,12 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 			filterExpressionAttrs['#pet_name'] = 'name';
 		}
 
-		const params = {	
+		const params: DynamoDB.DocumentClient.QueryInput = {	
 			TableName: process.env.PETS_TABLE_NAME || '',
 			IndexName: process.env.PETS_TABLE_SEC_INDEX,
-			KeyConditionExpression: 'fundationId = :fundationId',
-			FilterExpression: filterExpression,
+			KeyConditionExpression: '#fundationId = :fundationId',
 			ExpressionAttributeNames: filterExpressionAttrs,
+			FilterExpression: filterExpression || undefined,
 			ExpressionAttributeValues: filterExpressionValues,
 		};
 
