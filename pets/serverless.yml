@@ -1,0 +1,36 @@
+service: alegra-pets-training-pets-backend
+frameworkVersion: '3'
+
+useDotenv: true
+
+custom:
+  common: ${file(../serverless.common.yml)}
+  esbuild:
+    target: 'node14'
+    exclude: [
+      'aws-sdk', 
+      'jsonwebtoken', 
+      'aws-lambda',
+      'ulid',
+    ]
+
+plugins: ${self:custom.common.plugins}
+
+provider: ${self:custom.common.provider}
+
+functions:
+  test:
+    handler: src/create-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+      - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+    events:
+      - httpApi:
+          path: /pets
+          method: post
+          authorizer: ${self:custom.common.lambdaAuthorizer}
+  
