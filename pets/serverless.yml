@@ -48,3 +48,13 @@ functions:
       - httpApi:
           path: /pets/{fundationId}
           method: get
+  getOnePet:
+    name: get-one-pet-${opt:stage}
+    handler: src/get-one-pet.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+    events:
+      - httpApi:
+          path: /pets
+          method: get
