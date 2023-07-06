@@ -16,13 +16,17 @@ const dynamo = new DynamoDB.DocumentClient();
 
 export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 	const body = JSON.parse(event.body);
-	console.log(saveRequestBodyIntoBucket);
 
 	try {
 		const fundationToBeCreated = {
 			fundationId: ulid(),
 			name: body.name,
 		};
+
+		const bucketNameRequestBodyLogger = process.env.S3_BUCKET_NAME || '';
+		const key = ulid().toLowerCase() + fundationToBeCreated.fundationId + '.json';
+
+		await saveRequestBodyIntoBucket(bucketNameRequestBodyLogger, event.body, key);
 
 		const params = {
 			TableName: process.env.FUNDATIONS_TABLE_NAME || '',

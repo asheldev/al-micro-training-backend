@@ -20,8 +20,8 @@ provider:
         - Effect: Allow
           Action:
             - s3:PutObject
-          Resource:
-            'Fn::ImportValue': alegra-pets-training-s3-logger-arn-dev
+            - s3:GetObject
+          Resource: 'arn:aws:s3:::*/*'
         - Effect: Allow
           Action:
             - sns:Publish

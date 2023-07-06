@@ -30,6 +30,8 @@ functions:
       FUNDATIONS_TABLE_NAME:
         'Fn::ImportValue': ${env:FUNDATIONS_TABLE_NAME}
       JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME:
+        'Fn::ImportValue': ${env:S3_BUCKET_NAME}
     events:
       - httpApi:
           path: /fundations
