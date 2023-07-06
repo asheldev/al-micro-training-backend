@@ -14,8 +14,9 @@ type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 const dynamo = new DynamoDB.DocumentClient();
 
 export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
-	const queryParams = event.queryStringParameters;
+	const queryParams = event.queryStringParameters; 
 	const authorizationToken = event.headers.authorization;
+	const body = JSON.parse(event.body);
 
 	try {
 		const decodedToken = jwt.verify(authorizationToken, process.env.JWT_SECRET);
@@ -51,19 +52,43 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 			})
 		}
 
-		const paramsToDeletePet = {
+		let updateExpression: string[] = [];
+		const updateExpressionAttrs = {};
+		const updateExpressionValues = {};
+
+		if (body && body.type) {
+			updateExpression.push('#pet_type = :type');
+			updateExpressionValues[':type'] = body.type;
+			updateExpressionAttrs['#pet_type'] = 'type';
+		}
+
+		if (body && body.breed) {
+			updateExpression.push('#pet_breed = :breed');
+			updateExpressionValues[':breed'] = body.breed;
+			updateExpressionAttrs['#pet_breed'] = 'breed';
+		}
+
+		if (body && body.name) {
+			updateExpression.push('#pet_name = :name');
+			updateExpressionValues[':name'] = body.name;
+			updateExpressionAttrs['#pet_name'] = 'name';
+		}
+
+		const paramsToUpdatePet: DynamoDB.DocumentClient.UpdateItemInput = {
 			TableName: process.env.PETS_TABLE_NAME || '',
-			Key: {
-				petId: petToDelete.Items && petToDelete.Items[0].petId,
-			}
+			ExpressionAttributeNames: updateExpressionAttrs,
+			ExpressionAttributeValues: updateExpressionValues,
+			Key: { petId: queryParams.petId },
+			ReturnValues: 'ALL_NEW',
+			UpdateExpression: 'SET ' + updateExpression.join(',')
 		}
 	
-		const result = await dynamo.delete(paramsToDeletePet, () => {}).promise();
+		const petUpdated = await dynamo.update(paramsToUpdatePet).promise();
 
 		return generateResponse({
 			responseBody: {
-				message: 'Pet deleted successfull',
-				data: result,
+				message: 'Pet updated successfull',
+				data: petUpdated.Attributes,
 			},
 		});
 	} catch (error) {
@@ -72,8 +97,9 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 		return generateResponse({
 			statusCode: 400,
 			responseBody: {
-				message: 'Error retrieving the pets'
+				message: 'Error updating the pet'
 			}
 		});
 	}
 };
+

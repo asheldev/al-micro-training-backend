@@ -75,3 +75,18 @@ functions:
           path: /pets
           method: delete
           authorizer: ${self:custom.common.lambdaAuthorizer}
+
+  updatePet:
+    name: update-pet-${opt:stage}
+    handler: src/update-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+    events:
+      - httpApi:
+          path: /pets
+          method: put
+          authorizer: ${self:custom.common.lambdaAuthorizer}
