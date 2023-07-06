@@ -6,8 +6,10 @@ import {
 } from 'aws-lambda';
 
 import jwt from 'jsonwebtoken';
+import { ulid } from 'ulid';
 
 import { generateResponse } from '../../utils';
+import { saveRequestBodyIntoBucket } from '/opt/shared/logger';
 
 type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 
@@ -20,6 +22,11 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 
 	try {
 		const decodedToken = jwt.verify(authorizationToken, process.env.JWT_SECRET);
+
+		const bucketRequestLogger = process.env.S3_BUCKET_NAME || '';
+		const key = ulid().toLowerCase() + decodedToken.fundationId + '.json';
+
+		await saveRequestBodyIntoBucket(bucketRequestLogger, body, key);
 
 		const paramsToFindPet = {	
 			TableName: process.env.PETS_TABLE_NAME || '',

@@ -9,6 +9,7 @@ import { ulid } from 'ulid';
 import jwt from 'jsonwebtoken';
 
 import { generateResponse } from '../../utils';
+import { saveRequestBodyIntoBucket } from '/opt/shared/logger';
 
 type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 
@@ -21,6 +22,11 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 	try {
 		const decodedToken = jwt.verify(authorizationToken, process.env.JWT_SECRET);
 
+		const bucketNameRequestLogger = process.env.S3_BUCKET_NAME || '';
+		const key = ulid().toLowerCase() + decodedToken.fundationId + '.json';
+
+		await saveRequestBodyIntoBucket(bucketNameRequestLogger, event.body, key);
+		
 		const petToBeCreated = {
 			petId: ulid(),
 			fundationId: decodedToken.fundationId,

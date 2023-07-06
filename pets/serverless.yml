@@ -28,10 +28,12 @@ functions:
     layers:
       - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
       - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+      - !Ref S3LoggerLambdaLayer
     environment:
       PETS_TABLE_NAME:
         'Fn::ImportValue': ${env:PETS_TABLE_NAME}
       JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
     events:
       - httpApi:
           path: /pets
@@ -81,12 +83,18 @@ functions:
     handler: src/update-pet.handler
     layers:
       - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+      - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+      - !Ref S3LoggerLambdaLayer
     environment:
       PETS_TABLE_NAME:
         'Fn::ImportValue': ${env:PETS_TABLE_NAME}
       JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
     events:
       - httpApi:
           path: /pets
           method: put
           authorizer: ${self:custom.common.lambdaAuthorizer}
+
+layers:
+  s3Logger: ${self:custom.common.loggerLayer}

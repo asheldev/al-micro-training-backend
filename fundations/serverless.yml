@@ -38,11 +38,4 @@ functions:
           method: post
  
 layers:
-  s3Logger: 
-    path: ../layers/shared
-    name: s3-logger-${opt:stage}
-    compatibleRuntimes:
-      - nodejs14.x
-      - nodejs16.x
-
-
+  s3Logger: ${self:custom.common.loggerLayer}
