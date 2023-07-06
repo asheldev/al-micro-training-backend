@@ -17,6 +17,17 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            'Fn::ImportValue': alegra-pets-training-s3-logger-arn-dev
+        - Effect: Allow
+          Action:
+            - sns:Publish
+            - sns:Subscribe
+          Resource:
+            'Fn::ImportValue': alegra-pets-training-adoption-topic-arn-dev
 
 plugins:
   - serverless-dotenv-plugin
@@ -26,3 +37,11 @@ lambdaAuthorizer:
   type: request
   id:
     'Fn::ImportValue': alegra-pets-training-jwt-authorizer-id-dev
+
+loggerLayer:
+  path: ../layers/shared
+  name: s3-logger-${opt:stage}
+  compatibleRuntimes:
+    - nodejs14.x
+    - nodejs16.x
+

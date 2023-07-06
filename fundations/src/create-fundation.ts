@@ -8,6 +8,7 @@ import {
 import jwt from 'jsonwebtoken';
 import { ulid } from 'ulid';
 import { generateResponse } from '../../utils';
+import { saveRequestBodyIntoBucket } from '/opt/shared/logger';
 
 type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 
@@ -15,6 +16,7 @@ const dynamo = new DynamoDB.DocumentClient();
 
 export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 	const body = JSON.parse(event.body);
+	console.log(saveRequestBodyIntoBucket);
 
 	try {
 		const fundationToBeCreated = {
