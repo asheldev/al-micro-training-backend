@@ -26,8 +26,7 @@ provider:
           Action:
             - sns:Publish
             - sns:Subscribe
-          Resource:
-            'Fn::ImportValue': alegra-pets-training-adoption-topic-arn-dev
+          Resource: 'arn:aws:sns:us-east-1:*:*'
 
 plugins:
   - serverless-dotenv-plugin

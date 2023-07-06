@@ -33,7 +33,8 @@ export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
 			name: body.name,
 			type: body.type,
 			breed: body.breed,
-			status: 'no adoptada'
+			status: 'not happy',
+			isAdopted: false
 		};
 
 		const params = {

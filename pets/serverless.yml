@@ -96,5 +96,18 @@ functions:
           method: put
           authorizer: ${self:custom.common.lambdaAuthorizer}
 
+  adoptPet:
+    name: adopt-pet-${opt:stage}
+    handler: src/adopt-pet.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      SNS_EVENT_ARN:
+        'Fn::ImportValue': ${env:SNS_EVENT_ARN}
+    events:
+      - httpApi:
+          path: /pets/adopt/{petId}
+          method: put
+
 layers:
   s3Logger: ${self:custom.common.loggerLayer}
