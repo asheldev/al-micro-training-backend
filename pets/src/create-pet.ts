@@ -5,8 +5,9 @@ import {
   APIGatewayProxyResultV2,
 } from 'aws-lambda';
 
-import jwt from 'jsonwebtoken';
 import { ulid } from 'ulid';
+import jwt from 'jsonwebtoken';
+
 import { generateResponse } from '../../utils';
 import { saveRequestBodyIntoBucket } from '/opt/shared/logger';
 
@@ -15,38 +16,37 @@ type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 const dynamo = new DynamoDB.DocumentClient();
 
 export const handler: ProxyHandler = async (event: APIGatewayProxyEventV2) => {
+	const authorizationToken = event.headers.authorization;
 	const body = JSON.parse(event.body);
 
 	try {
-		const fundationToBeCreated = {
-			fundationId: ulid(),
+		const decodedToken = jwt.verify(authorizationToken, process.env.JWT_SECRET);
+
+		const bucketNameRequestLogger = process.env.S3_BUCKET_NAME || '';
+		const key = ulid().toLowerCase() + decodedToken.fundationId + '.json';
+
+		await saveRequestBodyIntoBucket(bucketNameRequestLogger, event.body, key);
+		
+		const petToBeCreated = {
+			petId: ulid(),
+			fundationId: decodedToken.fundationId,
 			name: body.name,
+			type: body.type,
+			breed: body.breed,
+			status: 'not happy',
+			isAdopted: false
 		};
 
-		const bucketNameRequestBodyLogger = process.env.S3_BUCKET_NAME || '';
-		const key = ulid().toLowerCase() + fundationToBeCreated.fundationId + '.json';
-
-		await saveRequestBodyIntoBucket(bucketNameRequestBodyLogger, event.body, key);
-
 		const params = {
-			TableName: process.env.FUNDATIONS_TABLE_NAME || '',
-			Item: {
-				...fundationToBeCreated,
-				accessToken: jwt.sign(
-					{
-						fundationId: fundationToBeCreated.fundationId,
-						fundationName: fundationToBeCreated.name,
-					},
-					process.env.JWT_SECRET
-				),
-			},
+			TableName: process.env.PETS_TABLE_NAME || '',
+			Item: { ...petToBeCreated },
 		};
 
 		await dynamo.put(params).promise();
 
 		return generateResponse({
 			responseBody: {
-				message: 'Fundation Created!',
+				message: 'Pet Created!',
 				data: params.Item,
 			}
 		});

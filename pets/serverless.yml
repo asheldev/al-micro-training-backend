@@ -1,0 +1,113 @@
+service: alegra-pets-training-pets-backend
+frameworkVersion: '3'
+
+useDotenv: true
+
+package:
+  individually: true
+
+custom:
+  common: ${file(../serverless.common.yml)}
+  esbuild:
+    target: 'node14'
+    exclude: [
+      'aws-sdk', 
+      'jsonwebtoken', 
+      'aws-lambda',
+      'ulid',
+    ]
+
+plugins: ${self:custom.common.plugins}
+
+provider: ${self:custom.common.provider}
+
+functions:
+  createPet:
+    name: create-pet-${opt:stage}
+    handler: src/create-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+      - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+      - !Ref S3LoggerLambdaLayer
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+    events:
+      - httpApi:
+          path: /pets
+          method: post
+          authorizer: ${self:custom.common.lambdaAuthorizer}
+
+  getAllPets:
+    name: get-all-pets-${opt:stage}
+    handler: src/get-all-pets.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      PETS_TABLE_SEC_INDEX: ${env:PETS_TABLE_SEC_INDEX}
+    events:
+      - httpApi:
+          path: /pets/{fundationId}
+          method: get
+
+  getOnePet:
+    name: get-one-pet-${opt:stage}
+    handler: src/get-one-pet.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+    events:
+      - httpApi:
+          path: /pets
+          method: get
+
+  deletePet:
+    name: delete-pet-${opt:stage}
+    handler: src/delete-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+    events:
+      - httpApi:
+          path: /pets
+          method: delete
+          authorizer: ${self:custom.common.lambdaAuthorizer}
+
+  updatePet:
+    name: update-pet-${opt:stage}
+    handler: src/update-pet.handler
+    layers:
+      - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
+      - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+      - !Ref S3LoggerLambdaLayer
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+    events:
+      - httpApi:
+          path: /pets
+          method: put
+          authorizer: ${self:custom.common.lambdaAuthorizer}
+
+  adoptPet:
+    name: adopt-pet-${opt:stage}
+    handler: src/adopt-pet.handler
+    environment:
+      PETS_TABLE_NAME:
+        'Fn::ImportValue': ${env:PETS_TABLE_NAME}
+      SNS_EVENT_ARN:
+        'Fn::ImportValue': ${env:SNS_EVENT_ARN}
+    events:
+      - httpApi:
+          path: /pets/adopt/{petId}
+          method: put
+
+layers:
+  s3Logger: ${self:custom.common.loggerLayer}

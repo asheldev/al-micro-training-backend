@@ -19,18 +19,23 @@ plugins: ${self:custom.common.plugins}
 provider: ${self:custom.common.provider}
 
 functions:
-  test:
+  createFundation:
+    name: create-fundation-${opt:stage}
     handler: src/create-fundation.handler
     layers:
       - 'Fn::ImportValue': ${env:JWT_LAYER_ARN}
       - 'Fn::ImportValue': ${env:ULID_LAYER_ARN}
+      - !Ref S3LoggerLambdaLayer
     environment:
       FUNDATIONS_TABLE_NAME:
         'Fn::ImportValue': ${env:FUNDATIONS_TABLE_NAME}
       JWT_SECRET: ${env:JWT_SECRET}
+      S3_BUCKET_NAME:
+        'Fn::ImportValue': ${env:S3_BUCKET_NAME}
     events:
       - httpApi:
           path: /fundations
           method: post
-          authorizer: ${self:custom.common.lambdaAuthorizer}
-  
+ 
+layers:
+  s3Logger: ${self:custom.common.loggerLayer}
